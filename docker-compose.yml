@@ -1,0 +1,44 @@
+# docker-compose.yml
+version: '3.8'
+
+services:
+  airflow:
+    build:
+      context: ./airflow
+      dockerfile: Dockerfile
+    environment:
+      - AIRFLOW__CORE__LOAD_EXAMPLES=False
+      - AIRFLOW__CORE__EXECUTOR=LocalExecutor
+      - AIRFLOW__CORE__SQL_ALCHEMY_CONN=sqlite:////opt/airflow/airflow.db
+    volumes:
+      - ./airflow/dags:/opt/airflow/dags
+      - ./airflow/scripts:/opt/airflow/scripts
+      - shared_data:/shared_data
+    ports:
+      - "8080:8080"
+    depends_on:
+      - sentiment_analysis
+      - streamlit
+
+  sentiment_analysis:
+    build:
+      context: ./sentiment_analysis
+      dockerfile: Dockerfile
+    volumes:
+      - ./sentiment_analysis:/app
+      - shared_data:/shared_data
+    depends_on:
+      - streamlit
+
+  streamlit:
+    build:
+      context: ./streamlit
+      dockerfile: Dockerfile
+    volumes:
+      - ./streamlit:/app
+      - shared_data:/shared_data
+    ports:
+      - "8501:8501"
+
+volumes:
+  shared_data:
